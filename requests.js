@@ -3,7 +3,7 @@ export const requests = [
     name: 'msc',
     message: '🚢 MSC Cruise',
     selector: '.prices__main-price span',
-    url: 'https://www.msccruzeiros.com.br/ofertas/super-bingo?departureDateFrom=29%2F11%2F2025&departureDateTo=29%2F11%2F2025&passengers=2%7C0%7C0%7C0&area=SOA&nights=6%2C7',
+    url: 'https://www.msccruzeiros.com.br/Search%20Result?area=SOA&embkPort=SSZ&departureDateFrom=29%2F11%2F2025&departureDateTo=29%2F11%2F2025&passengers=2%7C0%7C0%7C0&page=1&nights=6%2C7&ships=SV',
   },
   {
     name: 'skyscanner',
