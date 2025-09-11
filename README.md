@@ -2,8 +2,9 @@ Installing:
 
 ```bash
 pnpm install
-pnpx puppeteer browsers install chrome
 ```
+
+Rename the .env.example file and populate the environment variables with your own credentials
 
 Running:
 
