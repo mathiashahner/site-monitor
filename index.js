@@ -24,6 +24,7 @@ const scraping = async () => {
 
       message += `\n${request.message}: ${value}`
     } catch (error) {
+      message += `\nError getting price`
       console.error(`Error processing ${request.name}:`, error.message)
     }
   }
