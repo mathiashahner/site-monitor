@@ -2,7 +2,7 @@ import 'dotenv/config'
 import puppeteer from 'puppeteer-core'
 import { requests } from './requests.js'
 
-const WEBHOOK_URL = process.env.WEBHOOK_URL
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN
 
 const scraping = async () => {
@@ -19,7 +19,7 @@ const scraping = async () => {
       await page.waitForSelector(request.selector)
 
       const value = await page.$eval(request.selector, (el) =>
-        el.textContent.trim()
+        el.textContent.trim(),
       )
 
       message += `\n${request.message}: ${value}`
@@ -36,7 +36,7 @@ const scraping = async () => {
 }
 
 const sendWebhookMessage = (message) => {
-  fetch(WEBHOOK_URL, {
+  fetch(DISCORD_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content: message }),

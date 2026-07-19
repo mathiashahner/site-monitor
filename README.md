@@ -12,7 +12,7 @@ A web scraping tool that monitors price changes on websites and sends notificati
 
    ```env
    BROWSERLESS_TOKEN=your_browserless_token_here
-   WEBHOOK_URL=your_discord_webhook_url_here
+   DISCORD_WEBHOOK_URL=your_discord_webhook_url_here
    ```
 
 4. Install Dependencies
