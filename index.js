@@ -7,11 +7,16 @@ const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
 const scraping = async () => {
-  const browser = IS_DEV_ENV
-    ? await chromium.launch({ headless: false })
-    : await chromium.connect({
-        wsEndpoint: `wss://production-sfo.browserless.io/?token=${BROWSERLESS_TOKEN}`,
-      })
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: '/data/data/com.termux/files/usr/bin/chromium-browser',
+    args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+    ]
+  });
 
   const page = await browser.newPage()
   let message = '🛎️ Prices update:\n'
@@ -22,7 +27,7 @@ const scraping = async () => {
 
       const value = await Promise.all(
         request.steps.map(async (step) => {
-          await page.waitForSelector(step.selector, { timeout: 5000 })
+          await page.waitForSelector(step.selector, { timeout: 15000 })
           return await page.locator(step.selector).first().textContent()
         }),
       )
@@ -34,7 +39,7 @@ const scraping = async () => {
     }
   }
 
-  // sendWebhookMessage(message)
+  sendWebhookMessage(message)
   console.log(message)
 
   await browser.close()
