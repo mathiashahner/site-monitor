@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { chromium } from 'playwright'
 import { requests } from './requests.js'
+import { saveScrapingResults } from './db.js'
 
 const isDevEnv = process.env.NODE_ENV === 'development'
 const browserlessToken = process.env.BROWSERLESS_TOKEN
@@ -26,17 +27,33 @@ const scraping = async () => {
           }),
         )
 
-        return `${request.message}: ${value}`
+        return {
+          name: request.name,
+          message: request.message,
+          value: value,
+          text: `${request.message}: ${value}`,
+        }
       } catch (error) {
         console.error(`Error processing ${request.name}:`, error.message)
-        return `${request.message}: Not found`
+        return {
+          name: request.name,
+          message: request.message,
+          value: null,
+          text: `${request.message}: Not found`,
+        }
       }
     }),
   )
 
   await browser.close()
 
-  return `🛎️ Prices update:\n${results.join('\n')}`
+  try {
+    await saveScrapingResults(results)
+  } catch (error) {
+    console.warn('MySQL persistence skipped:', error.message)
+  }
+
+  return `🛎️ Prices update:\n${results.map((result) => result.text).join('\n')}`
 }
 
 const sendMessage = async (message) => {
