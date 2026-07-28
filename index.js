@@ -2,55 +2,59 @@ import 'dotenv/config'
 import { chromium } from 'playwright'
 import { requests } from './requests.js'
 
-const IS_DEV_ENV = process.env.IS_DEV_ENV
-const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
+const isDevEnv = process.env.NODE_ENV === 'development'
+const browserlessToken = process.env.BROWSERLESS_TOKEN
+const discordoWebhookUrl = process.env.DISCORD_WEBHOOK_URL
 
 const scraping = async () => {
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: '/data/data/com.termux/files/usr/bin/chromium-browser',
-    args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu'
-    ]
-  });
-
-  const page = await browser.newPage()
-  let message = '🛎️ Prices update:\n'
-
-  for (const request of requests) {
-    try {
-      await page.goto(request.url, { waitUntil: 'domcontentloaded' })
-
-      const value = await Promise.all(
-        request.steps.map(async (step) => {
-          await page.waitForSelector(step.selector, { timeout: 15000 })
-          return await page.locator(step.selector).first().textContent()
-        }),
+  const browser = isDevEnv
+    ? await chromium.launch({ headless: false })
+    : await chromium.connect(
+        `wss://production-sfo.browserless.io/chromium/playwright?token=${browserlessToken}`,
       )
 
-      message += `\n${request.message}: ${value}`
-    } catch (error) {
-      message += `\n${request.message}: Not found`
-      console.error(`Error processing ${request.name}:`, error.message)
-    }
-  }
+  const results = await Promise.all(
+    requests.map(async (request) => {
+      try {
+        const page = await browser.newPage()
+        await page.goto(request.url, { waitUntil: 'domcontentloaded' })
 
-  sendWebhookMessage(message)
-  console.log(message)
+        const value = await Promise.all(
+          request.steps.map(async (step) => {
+            await page.waitForSelector(step.selector, { timeout: 5000 })
+            return await page.locator(step.selector).first().textContent()
+          }),
+        )
+
+        return `${request.message}: ${value}`
+      } catch (error) {
+        console.error(`Error processing ${request.name}:`, error.message)
+        return `${request.message}: Not found`
+      }
+    }),
+  )
 
   await browser.close()
+
+  return `🛎️ Prices update:\n${results.join('\n')}`
 }
 
-const sendWebhookMessage = (message) => {
-  fetch(DISCORD_WEBHOOK_URL, {
+const sendMessage = async (message) => {
+  if (isDevEnv) {
+    console.log(message)
+    return
+  }
+
+  await fetch(discordoWebhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content: message }),
   })
 }
 
-scraping()
+const main = async () => {
+  const message = await scraping()
+  await sendMessage(message)
+}
+
+main()
