@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { chromium } from 'playwright'
 import { requests } from './requests.js'
-import { saveScrapingResults } from './db.js'
+import { getLatestScrapingResults, saveScrapingResults } from './db.js'
 
 const isDevEnv = process.env.NODE_ENV === 'development'
 const browserlessToken = process.env.BROWSERLESS_TOKEN
@@ -30,8 +30,8 @@ const scraping = async () => {
         return {
           name: request.name,
           message: request.message,
-          value: value,
-          text: `${request.message}: ${value}`,
+          value: value[0],
+          text: `${request.message}: ${value[0]}`,
         }
       } catch (error) {
         console.error(`Error processing ${request.name}:`, error.message)
@@ -45,6 +45,23 @@ const scraping = async () => {
     }),
   )
 
+  let previousResults = []
+
+  try {
+    previousResults = await getLatestScrapingResults()
+  } catch (error) {
+    console.warn('Previous results lookup skipped:', error.message)
+  }
+
+  const previousValuesByName = new Map(
+    previousResults.map(({ name, value }) => [name, value]),
+  )
+
+  const newResults = results.filter((result) => {
+    const previousValue = previousValuesByName.get(result.name)
+    return previousValue !== result.value
+  })
+
   await browser.close()
 
   try {
@@ -53,10 +70,18 @@ const scraping = async () => {
     console.warn('MySQL persistence skipped:', error.message)
   }
 
-  return `🛎️ Prices update:\n${results.map((result) => result.text).join('\n')}`
+  if (newResults.length === 0) {
+    return ''
+  }
+
+  return `🛎️ Prices update:\n${newResults.map((result) => result.text).join('\n')}`
 }
 
 const sendMessage = async (message) => {
+  if (!message) {
+    return
+  }
+
   if (isDevEnv) {
     console.log(message)
     return

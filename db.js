@@ -7,6 +7,18 @@ const TABLE_NAME = 'results'
 
 let pool
 
+const ensureResultsTable = async (connection) => {
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      message VARCHAR(255) NOT NULL,
+      value TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+}
+
 export const getMysqlPool = async () => {
   if (!pool) {
     if (!MYSQL_HOST || !MYSQL_USER || !MYSQL_PASSWORD || !MYSQL_DATABASE) {
@@ -28,18 +40,28 @@ export const getMysqlPool = async () => {
   return pool
 }
 
+export const getLatestScrapingResults = async () => {
+  const connection = await getMysqlPool()
+
+  await ensureResultsTable(connection)
+
+  const [rows] = await connection.execute(`
+    SELECT current.name, current.value
+    FROM ${TABLE_NAME} current
+    INNER JOIN (
+      SELECT name, MAX(id) AS id
+      FROM ${TABLE_NAME}
+      GROUP BY name
+    ) latest ON latest.id = current.id
+  `)
+
+  return rows
+}
+
 export const saveScrapingResults = async (results) => {
   const connection = await getMysqlPool()
 
-  await connection.execute(`
-    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      message VARCHAR(255) NOT NULL,
-      value TEXT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `)
+  await ensureResultsTable(connection)
 
   await Promise.all(
     results.map(({ name, message, value }) =>
