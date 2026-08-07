@@ -20,8 +20,7 @@ export const requests = [
   {
     name: 'msc-super-bingo',
     message: '🚢 MSC Super Bingo',
-    // url: 'https://www.msccruzeiros.com.br/ofertas/super-bingo?departureDateFrom=21%2F07%2F2026&departureDateTo=21%2F06%2F2029&passengers=2%7C0%7C0%7C0&area=SOA&nights=6%2C7',
-    url: 'https://www.msccruzeiros.com.br/ofertas/super-bingo?departureDateFrom=21%2F07%2F2026&departureDateTo=21%2F06%2F2029&passengers=2%7C0%7C0%7C0&area=SOA&nights=6%2C7&ships=VI',
+    url: 'https://www.msccruzeiros.com.br/ofertas/super-bingo?departureDateFrom=05%2F12%2F2026&departureDateTo=05%2F12%2F2026&passengers=2%7C0%7C0%7C0&area=SOA&nights=6%2C7&ships=VI',
     steps: [{ selector: '.prices__main-price span' }],
   },
   // {
