@@ -55,6 +55,20 @@ crontab -e
 0 * * * * cd /path/to/site-monitor && node index.js
 ```
 
+## Deploying to a VPS with GitHub Actions
+
+This repository includes a GitHub Actions workflow that deploys on every push to `main`.
+
+The workflow expects these GitHub Secrets to be configured:
+
+- `VPS_HOST`: the VPS hostname or IP address
+- `VPS_USER`: the SSH username
+- `VPS_PASSWORD`: the SSH password
+- `VPS_PORT`: the SSH port, usually `22`
+- `VPS_PATH`: the absolute path to the checked-out repository on the VPS
+
+During deployment, the workflow connects to the VPS, runs `git pull origin main`, and then runs `pnpm install` to refresh dependencies.
+
 ## Troubleshooting
 
 - **Scraping failures**: Website selectors may have changed - update the CSS selector in `requests.js`
