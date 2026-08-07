@@ -19,6 +19,7 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script_stop: true
           script: |
+            source .profile
             cd "${{ secrets.VPS_PATH }}"
             git pull origin main
             pnpm install
